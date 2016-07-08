@@ -885,20 +885,20 @@ void THTensor_(addmm)(THTensor *r_, real beta, THTensor *t, real alpha, THTensor
   const long m = r__->size[(transpose_r == 'n' ? 0 : 1)];
   const long n = r__->size[(transpose_r == 'n' ? 1 : 0)];
   const long k = m1_->size[(transpose_r == 'n' ? 1 : 0)];
-  //printf("%ldx%ld = %ldx%ld X %ldx%ld m=%d n=%d k=%d transpose_m1 %c transpose_m2 %c\n", r_->size[0], r_->size[1], m1->size[0], m1->size[1], m2->size[0], m2->size[1], m, n, k, transpose_m1, transpose_m2);
-  if (r__->size[0] == 2 &&  transpose_m1 == 't' && transpose_m2 == 'n' && transpose_r == 't' && THTensor_(isContiguous)(m1_) && THTensor_(isContiguous)(m2_) && THTensor_(isContiguous)(r__)) {
-    long i, j, l;
+  if (r__->size[0] == 2 &&  transpose_m1 == 't' && transpose_m2 == 'n' && transpose_r == 't') {
+    long i, j, l, a_st, b_st, c_st;
     real * A = THTensor_(data)(m1_);
     real * B = THTensor_(data)(m2_);
     real * C = THTensor_(data)(r__);
-    printf("%ldx%ld = %ldx%ld (%ld) X %ldx%ld (%ld) m=%d n=%d k=%d transpose_m2 %c\n", r_->size[0], r_->size[1], m1->size[0], m1->size[1], m1->stride[0], m2->size[0], m2->size[1], m2->stride[0], m, n, k, transpose_m2); fflush(0);
+    a_st = m1_->stride[1];
+    b_st = m2_->stride[0];
+    c_st = r__->stride[0];
 #pragma omp parallel for schedule(static) private(i, j, l)
     for (i = 0; i < m; i++) {
       for (j = 0; j < 2 ; j++) {
-        C[j*m+i] = beta*C[j*m+i];
+        C[j*c_st+i] = beta*C[j*c_st+i];
         for (l = 0; l < k; l++) {
-          C[j*m + i] += alpha*A[i*k + l]*B[j*k + l];
-          //C[j*m + i] += alpha*A[l*m + i]*B[j*k + l];
+          C[j*c_st + i] += alpha*A[i*a_st + l]*B[j*b_st + l];
         }
       }
     }
